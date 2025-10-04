@@ -1,0 +1,99 @@
+close all 
+clear
+clc
+
+%%determina il 1° raggio di criticità e massa critica
+
+%%input
+
+p=17.3; %%densità (g/cm^3)
+A=250; %%numero di massa (g/mol)
+Of=1.55; %%C-S di fissione  (bn)
+Oel=6; %%C-S di urto elastico
+v=2.95;
+C=3;
+En=2; %(MeV)
+Ef=185; %(MeV)
+gamma=1/3;
+
+
+%%costanti
+Na=6.022*10^23;
+c=2.9979*10^8;
+
+%%(cm^3->m^3)
+p=p*10^6; %g/m^3
+%%(bn->m^2)
+Of=Of*10^-28; 
+Oel=Oel*10^-28;
+
+%%calcolo
+n=(p*Na/A); %% (1/m^3)
+
+Ot=Of+Oel; 
+
+lf=1/(Of*n); %(m)
+lt=1/(Ot*n); %(m)
+
+d=sqrt(lf*lt/(3*(v-1))); %%(m)
+
+e=3*d/(2*lt);
+x=funz_non_lin(e);
+
+r0=x*d %%(m)
+
+M0=(4/3)*pi*p*(r0^3)/1000 %%(Kg)
+
+g=1+En/939.565;
+vn=c*sqrt(1-(1/g^2)); %%(m/s)
+tau=lf/vn;     %%(s)
+
+%%%%%%%%%%%%
+
+MC=M0*C;
+Rc=(3*MC*1000/(4*pi*p))^(1/3); %%(m)
+
+a=alfa(lf,lt,v,Rc);
+
+d_r=(sqrt(C)-C^(1/3))*r0;  %(m)
+media_pr=0.5*(1+C^1/3)*p*Rc; %%(g/m^2)
+
+Y=d_r*(a^2)*media_pr*MC/(3*gamma*(tau^2)*p)
+Y2=4*pi*(Rc^3)*(a^2)*d_r*media_pr/(3*tau^2)
+
+VC=(4/3)*pi*Rc^3;
+eff=Y/(Ef*n*VC)
+%%%%%%%%%%%%
+
+
+function a=alfa(lf,lt,v,r)
+    a=v-1-0.001;
+    d=sqrt(lf*lt/(3*(v-a-1)));
+    x=r/d;
+    e=3*d/(2*lt);
+    y=x*cot(x)+e*x-1;
+    while((y>10^-3 || y<-10^-3) && a>0)
+        a=a-0.0001;
+        d=sqrt(lf*lt/(3*(v-a-1)));
+        x=r/d;
+        e=3*d/(2*lt);
+        y=x*cot(x)+e*x-1;
+    end
+end
+
+
+function x=funz_non_lin(e)
+    x=0.01;
+    y=x*cot(x)+e*x-1;
+    while(y>10^-3)
+        x=x+0.001;
+        y=x*cot(x)+e*x-1;
+    end
+   
+end
+
+
+
+
+
+
